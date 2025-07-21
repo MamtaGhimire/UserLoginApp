@@ -22,6 +22,21 @@ if (app.Environment.IsDevelopment())
 
 app.MapGet("/", () => "User Login App is running!");
 
+
+app.MapPost("/register", (User user, UserService service) =>
+{
+    var success = service.RegisterUser(user);
+    return success ? Results.Ok("Registration successful") : Results.BadRequest("Username already exists");
+});
+
+
+app.MapPost("/login", (User user, UserService service) =>
+{
+    var success = service.Login(user.Username, user.PasswordHash);
+    return success ? Results.Ok("Login successful") : Results.Unauthorized();
+});
+
+
 app.MapGet("/users", (UserService service) => //get's all users
 {
     return service.GetAllUsers();
@@ -39,7 +54,7 @@ app.MapGet("/users/{id}", (string id, UserService service) =>
     return user is not null ? Results.Ok(user) : Results.NotFound();
 });
 
-// PUT update user
+
 app.MapPut("/users/{id}", (string id, User updatedUser, UserService service) =>
 {
     var existingUser = service.GetUserById(id);
@@ -49,7 +64,6 @@ app.MapPut("/users/{id}", (string id, User updatedUser, UserService service) =>
     return Results.Ok(updatedUser);
 });
 
-// DELETE user
 app.MapDelete("/users/{id}", (string id, UserService service) =>
 {
     var user = service.GetUserById(id);

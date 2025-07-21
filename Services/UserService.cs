@@ -14,6 +14,26 @@ public class UserService
     var mongoDatabase = mongoClient.GetDatabase(mongoSettings.Value.DatabaseName);
     _userCollection = mongoDatabase.GetCollection<User>(mongoSettings.Value.UserCollectionName);
   }
+   
+   public bool RegisterUser(User user)
+{
+    var existingUser = _userCollection.Find(u => u.Username == user.Username).FirstOrDefault();
+    if (existingUser != null) return false;
+
+    // Hash the password
+    user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(user.PasswordHash);
+    _userCollection.InsertOne(user);
+    return true;
+}
+
+public bool Login(string username, string password)
+{
+    var user = _userCollection.Find(u => u.Username == username).FirstOrDefault();
+    if (user == null) return false;
+
+    // Verify password
+    return BCrypt.Net.BCrypt.Verify(password, user.PasswordHash);
+}
 
   public List<User> GetAllUsers() => _userCollection.Find(_ => true).ToList();
 
